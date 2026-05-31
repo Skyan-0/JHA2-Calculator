@@ -795,3 +795,464 @@ fun MainCalculatorLayout(
         }
     }
 }
+@Composable
+fun ScientificFunctionGrid(
+    onAction: (CalculatorAction) -> Unit,
+    accentColor: Color,
+    neutralColor: Color
+) {
+    val items = listOf(
+        "sin" to CalculatorAction.ScienceFunc("sin"),
+        "cos" to CalculatorAction.ScienceFunc("cos"),
+        "tan" to CalculatorAction.ScienceFunc("tan"),
+        "log" to CalculatorAction.ScienceFunc("log"),
+        "ln" to CalculatorAction.ScienceFunc("ln"),
+        "√" to CalculatorAction.ScienceFunc("√"),
+        "x²" to CalculatorAction.ScienceFunc("sqr"),
+        "xʸ" to CalculatorAction.Operator("^"),
+        "x!" to CalculatorAction.Number("!"),
+        "π" to CalculatorAction.Number("π"),
+        "e" to CalculatorAction.Number("e"),
+        "(" to CalculatorAction.Number("("),
+        ")" to CalculatorAction.Number(")")
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF161B22))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        val rows = items.chunked(5)
+        for (row in rows) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                for (item in row) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        ScienceButton(
+                            label = item.first,
+                            onClick = { onAction(item.second) },
+                            accentColor = accentColor,
+                            baseBg = neutralColor
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ScienceButton(
+    label: String,
+    onClick: () -> Unit,
+    accentColor: Color,
+    baseBg: Color
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.90f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "science_press_anim"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(12.dp))
+            .background(baseBg.copy(alpha = 0.5f))
+            .border(0.5.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                        onClick()
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White.copy(alpha = 0.9f)
+        )
+    }
+}
+
+@Composable
+fun KeypadGrid(
+    onAction: (CalculatorAction) -> Unit,
+    primaryGold: Color,
+    champagne: Color,
+    charcoal: Color,
+    whiteText: Color
+) {
+    val keyLayout = listOf(
+        listOf(
+            "AC" to CalculatorAction.Clear,
+            "±" to CalculatorAction.ToggleSign,
+            "%" to CalculatorAction.Percentage,
+            "÷" to CalculatorAction.Operator("÷")
+        ),
+        listOf(
+            "7" to CalculatorAction.Number("7"),
+            "8" to CalculatorAction.Number("8"),
+            "9" to CalculatorAction.Number("9"),
+            "×" to CalculatorAction.Operator("×")
+        ),
+        listOf(
+            "4" to CalculatorAction.Number("4"),
+            "5" to CalculatorAction.Number("5"),
+            "6" to CalculatorAction.Number("6"),
+            "−" to CalculatorAction.Operator("−")
+        ),
+        listOf(
+            "1" to CalculatorAction.Number("1"),
+            "2" to CalculatorAction.Number("2"),
+            "3" to CalculatorAction.Number("3"),
+            "+" to CalculatorAction.Operator("+")
+        ),
+        listOf(
+            "0" to CalculatorAction.Number("0"),
+            "." to CalculatorAction.Decimal,
+            "⌫" to CalculatorAction.Delete,
+            "=" to CalculatorAction.Calculate
+        )
+    )
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        for (row in keyLayout) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                for (item in row) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        PremiumKey(
+                            label = item.first,
+                            action = item.second,
+                            onAction = onAction,
+                            gold = primaryGold,
+                            champagne = champagne,
+                            baseBg = charcoal,
+                            whiteText = whiteText
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PremiumKey(
+    label: String,
+    action: CalculatorAction,
+    onAction: (CalculatorAction) -> Unit,
+    gold: Color,
+    champagne: Color,
+    baseBg: Color,
+    whiteText: Color
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+        label = "classic_press_anim"
+    )
+
+    val surfaceColor = when (label) {
+        "=" -> gold
+        "÷", "×", "−", "+" -> champagne.copy(alpha = 0.15f)
+        "AC", "±", "%", "⌫" -> Color(0xFF21262D)
+        else -> Color(0xFF161B22)
+    }
+
+    val contentColor = when (label) {
+        "=" -> Color.Black
+        "÷", "×", "−", "+" -> gold
+        "AC", "±", "%", "⌫" -> champagne
+        else -> whiteText
+    }
+
+    val glowBorderColor = if (label == "=") gold else Color.White.copy(alpha = 0.05f)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .scale(scale)
+            .clip(RoundedCornerShape(22.dp))
+            .background(surfaceColor)
+            .border(1.dp, glowBorderColor, RoundedCornerShape(22.dp))
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                        onAction(action)
+                    }
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = contentColor
+        )
+    }
+}
+
+@Composable
+fun HistoryPanel(
+    historyList: List<HistoryItem>,
+    onApply: (HistoryItem) -> Unit,
+    onDelete: (HistoryItem) -> Unit,
+    onClearAll: () -> Unit,
+    onClose: () -> Unit,
+    bg: Color,
+    gold: Color,
+    textCol: Color,
+    gray: Color
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bg.copy(alpha = 0.98f))
+            .padding(24.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Calculation History",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textCol
+                )
+                Row {
+                    if (historyList.isNotEmpty()) {
+                        IconButton(onClick = onClearAll) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Clear All Logs",
+                                tint = Color.Red.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                    IconButton(onClick = onClose) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Dismiss History",
+                            tint = textCol
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (historyList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "History is empty",
+                        color = gray,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(historyList) { item ->
+                        HistoryCard(
+                            item = item,
+                            onClick = { onApply(item) },
+                            onDelete = { onDelete(item) },
+                            gold = gold,
+                            textCol = textCol,
+                            gray = gray
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryCard(
+    item: HistoryItem,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    gold: Color,
+    textCol: Color,
+    gray: Color
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF161B22))
+            .border(0.5.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(16.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.expression,
+                        color = gray,
+                        fontSize = 16.sp,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "= ${item.result}",
+                        color = gold,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Item",
+                        tint = Color.White.copy(alpha = 0.3f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsPanel(
+    isHaptic: Boolean,
+    onHapticToggle: (Boolean) -> Unit,
+    onClose: () -> Unit,
+    bg: Color,
+    gold: Color,
+    textCol: Color,
+    gray: Color
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bg.copy(alpha = 0.98f))
+            .padding(24.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Preferences",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textCol
+                )
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Dismiss Panel",
+                        tint = textCol
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF161B22))
+                    .padding(18.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Haptic Feedback",
+                        color = textCol,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "Vibrate on button interaction",
+                        color = gray,
+                        fontSize = 12.sp
+                    )
+                }
+                Switch(
+                    checked = isHaptic,
+                    onCheckedChange = onHapticToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = gold,
+                        checkedTrackColor = gold.copy(alpha = 0.4f)
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF161B22))
+                    .padding(18.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "JHA2 App Information",
+                        color = gold,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "This application implements professional MVVM architectures, using a high performance, thread-safe customized mathematical parser, integrated with an on-device Android Room SQL Storage Engine. No user tracking, zero metrics collection, built strictly for local high-fidelity computation.",
+                        color = gray,
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
+    }
+}
