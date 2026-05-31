@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Stylized, luxury-style J2 logo in gold -->
+    <path
+        android:fillColor="#D4A017"
+        android:pathData="M 32 30 H 76 V 40 H 54 V 62 Q 54 74 42 74 Q 30 74 30 62 H 42 Q 42 66 44 64 Q 46 62 46 58 V 30 Z" />
+    <path
+        android:fillColor="#F5E6C8"
+        android:pathData="M 60 48 H 76 V 56 H 60 Z M 60 60 H 76 V 68 H 60 Z" />
+</vector>
