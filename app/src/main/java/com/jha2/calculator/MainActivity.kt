@@ -190,7 +190,7 @@ class MathParser(private val input: String) {
                         if (x <= 0) throw ArithmeticException("Domain Error")
                         ln(x)
                     }
-                    "sqrt" || "√" -> {
+                    "sqrt", "√" -> {
                         if (x < 0) throw ArithmeticException("Domain Error")
                         sqrt(x)
                     }
