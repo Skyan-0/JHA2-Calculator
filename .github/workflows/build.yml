@@ -1,4 +1,4 @@
-name: Build JHA2 Premium APK (No Wrapper)
+name: Build JHA2 Premium APK
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository Code
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -21,42 +21,23 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Configure Android SDK and Accept Licenses
-      run: |
-        # GitHub ubuntu-latest runners come with the base Android SDK pre-installed at $ANDROID_HOME.
-        # We explicitly accept all licenses and ensure the required platform and build tools are installed.
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        
-        # Automatically accept all SDK licenses
-        yes | sdkmanager --licenses
-        
-        # Install exact API level and build tools required for JHA2
-        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Accept Android SDK Licenses
+      run: yes | sdkmanager --licenses
 
     - name: Install Gradle Directly
       run: |
-        # Download Gradle 8.5 binary directly from Gradle servers
         wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
-        
-        # Unzip to /opt directory
         sudo unzip -q gradle-8.5-bin.zip -d /opt/
-        
-        # Add the native Gradle executable to the GitHub Actions system path
         echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
 
-    - name: Verify Gradle Installation
-      run: |
-        # Verify that the system is using the direct installation
-        gradle --version
-
     - name: Build Debug APK
-      run: |
-        # Execute the build using the globally installed Gradle command (NO wrapper)
-        gradle assembleDebug --no-daemon
+      run: gradle assembleDebug --no-daemon
 
-    - name: Upload JHA2 APK Artifact
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: JHA2-Premium-Debug-APK
+        name: app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
