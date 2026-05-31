@@ -570,3 +570,228 @@ fun MainCalculatorLayout(
     gray: Color
 ) {
     val expr by 
+ viewModel.expression.collectAsState()
+    val res by viewModel.result.collectAsState()
+    val isSciExpanded by viewModel.isScienceExpanded.collectAsState()
+    val isSettingsOpen by viewModel.isSettingsOpen.collectAsState()
+    val isHaptic by viewModel.isHapticEnabled.collectAsState()
+    val historyList by viewModel.history.collectAsState(initial = emptyList())
+
+    val context = LocalContext.current
+    var isHistoryOpen by remember { mutableStateOf(false) }
+
+    fun triggerVibration() {
+        if (!isHaptic) return
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(18, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(18)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bg)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            
+            // Header Action Options Panel
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "JHA2",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primary,
+                    letterSpacing = 2.sp,
+                    fontFamily = FontFamily.Serif
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    IconButton(onClick = {
+                        triggerVibration()
+                        isHistoryOpen = !isHistoryOpen
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "History Log",
+                            tint = if (isHistoryOpen) primary else textCol
+                        )
+                    }
+                    IconButton(onClick = {
+                        triggerVibration()
+                        viewModel.toggleSettingsPanel(true)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "App Settings",
+                            tint = textCol
+                        )
+                    }
+                }
+            }
+
+            // Calculation Display Terminal
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1.3f)
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = expr.ifEmpty { " " },
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        color = gray,
+                        textAlign = TextAlign.Right,
+                        fontWeight = FontWeight.Light,
+                        letterSpacing = 1.sp
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 2
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                val adaptiveFontSize = when {
+                    res.length > 15 -> 32.sp
+                    res.length > 10 -> 44.sp
+                    else -> 56.sp
+                }
+                
+                Text(
+                    text = res,
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        color = textCol,
+                        fontSize = adaptiveFontSize,
+                        textAlign = TextAlign.Right,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 2
+                )
+            }
+
+            // Scientific Grid Configuration
+            AnimatedVisibility(
+                visible = isSciExpanded,
+                enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
+                exit = shrinkVertically(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) + fadeOut()
+            ) {
+                ScientificFunctionGrid(
+                    onAction = { action ->
+                        triggerVibration()
+                        viewModel.onAction(action)
+                    },
+                    accentColor = accent,
+                    neutralColor = bg
+                )
+            }
+
+            // Slide Toggle Indicator Bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        triggerVibration()
+                        viewModel.onAction(CalculatorAction.ToggleSciencePanel)
+                    }
+                    .padding(vertical = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isSciExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                    contentDescription = "Toggle Science Panel",
+                    tint = primary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            // Master Classic/Science Input Keypad
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(2.6f)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                KeypadGrid(
+                    onAction = { action ->
+                        triggerVibration()
+                        viewModel.onAction(action)
+                    },
+                    primaryGold = primary,
+                    champagne = secondary,
+                    charcoal = bg,
+                    whiteText = textCol
+                )
+            }
+        }
+
+        // Animated Swipe History Panel Draw
+        AnimatedVisibility(
+            visible = isHistoryOpen,
+            enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut(),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            HistoryPanel(
+                historyList = historyList,
+                onApply = { item ->
+                    triggerVibration()
+                    viewModel.applyHistoryToExpression(item)
+                    isHistoryOpen = false
+                },
+                onDelete = { item ->
+                    triggerVibration()
+                    viewModel.deleteHistoryItem(item)
+                },
+                onClearAll = {
+                    triggerVibration()
+                    viewModel.clearHistory()
+                },
+                onClose = {
+                    triggerVibration()
+                    isHistoryOpen = false
+                },
+                bg = bg,
+                gold = primary,
+                textCol = textCol,
+                gray = gray
+            )
+        }
+
+        // Settings Sheet Cover Modal
+        AnimatedVisibility(
+            visible = isSettingsOpen,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SettingsPanel(
+                isHaptic = isHaptic,
+                onHapticToggle = { viewModel.toggleHaptic(it) },
+                onClose = { viewModel.toggleSettingsPanel(false) },
+                bg = bg,
+                gold = primary,
+                textCol = textCol,
+                gray = gray
+            )
+        }
+    }
+}
