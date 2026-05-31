@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_charcoal">#0D1117</color>
+    <color name="primary_gold">#D4A017</color>
+    <color name="secondary_champagne">#F5E6C8</color>
+    <color name="accent_emerald">#00C896</color>
+    <color name="white">#FFFFFF</color>
+    <color name="secondary_gray">#A1A1AA</color>
+</resources>
