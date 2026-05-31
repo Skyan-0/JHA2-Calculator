@@ -511,7 +511,7 @@ fun LuxurySplashScreen(gold: Color, charcoal: Color) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(150dp)
+                    .size(150.dp)
                     .scale(scaleGlow)
                     .background(
                         Brush.radialGradient(
@@ -524,7 +524,7 @@ fun LuxurySplashScreen(gold: Color, charcoal: Color) {
             ) {
                 Box(
                     modifier = Modifier
-                        .size(90dp)
+                        .size(90.dp)
                         .border(1.2.dp, gold, RoundedCornerShape(24.dp))
                         .background(charcoal, RoundedCornerShape(24.dp)),
                     contentAlignment = Alignment.Center
