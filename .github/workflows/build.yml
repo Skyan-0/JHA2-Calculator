@@ -26,10 +26,11 @@ jobs:
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
 
+    # Set executable permissions specifically to allow the Gradle Wrapper script to run seamlessly
     - name: Grant Execute Permission to Gradlew
-      run: chmod +x gradlew || true
+      run: chmod +x gradlew
 
-    - name: Build Debug APK
+    - name: Build Debug APK with Gradle Wrapper
       run: ./gradlew assembleDebug --no-daemon
 
     - name: Upload JHA2 APK Artifact
