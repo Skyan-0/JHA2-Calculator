@@ -1,4 +1,4 @@
-name: Build JHA2 Premium APK
+name: Build JHA2 Premium APK (No Wrapper)
 
 on:
   push:
@@ -20,18 +20,40 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: '17'
-        cache: 'gradle'
 
-    - name: Create Gradle Local Properties
+    - name: Configure Android SDK and Accept Licenses
       run: |
-        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        # GitHub ubuntu-latest runners come with the base Android SDK pre-installed at $ANDROID_HOME.
+        # We explicitly accept all licenses and ensure the required platform and build tools are installed.
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        
+        # Automatically accept all SDK licenses
+        yes | sdkmanager --licenses
+        
+        # Install exact API level and build tools required for JHA2
+        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-    # Set executable permissions specifically to allow the Gradle Wrapper script to run seamlessly
-    - name: Grant Execute Permission to Gradlew
-      run: chmod +x gradlew
+    - name: Install Gradle Directly
+      run: |
+        # Download Gradle 8.5 binary directly from Gradle servers
+        wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+        
+        # Unzip to /opt directory
+        sudo unzip -q gradle-8.5-bin.zip -d /opt/
+        
+        # Add the native Gradle executable to the GitHub Actions system path
+        echo "/opt/gradle-8.5/bin" >> $GITHUB_PATH
 
-    - name: Build Debug APK with Gradle Wrapper
-      run: ./gradlew assembleDebug --no-daemon
+    - name: Verify Gradle Installation
+      run: |
+        # Verify that the system is using the direct installation
+        gradle --version
+
+    - name: Build Debug APK
+      run: |
+        # Execute the build using the globally installed Gradle command (NO wrapper)
+        gradle assembleDebug --no-daemon
 
     - name: Upload JHA2 APK Artifact
       uses: actions/upload-artifact@v4
