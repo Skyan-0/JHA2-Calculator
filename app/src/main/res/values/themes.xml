@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.JHA2" parent="android:Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:statusBarColor">@color/bg_charcoal</item>
+        <item name="android:navigationBarColor">@color/bg_charcoal</item>
+        <item name="android:windowBackground">@color/bg_charcoal</item>
+    </style>
+</resources>
